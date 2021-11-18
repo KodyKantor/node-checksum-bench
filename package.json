@@ -1,0 +1,13 @@
+{
+  "name": "hasher",
+  "version": "1.0.0",
+  "description": "testbed for wasm hashing",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "dependencies": {
+    "vasync": "2.2.1"
+  }
+}
