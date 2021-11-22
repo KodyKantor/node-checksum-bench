@@ -1,9 +1,11 @@
 const mod_fs = require("fs");
 const mod_vasync = require("vasync");
+const mod_perf = require("perf_hooks");
 
 const mod_nvhash = require("nv-hash");
 const mod_crypto = require("crypto");
 const mod_noop = require("./noop");
+
 
 const NODE_CRYPTO_SUFFIX = "-node-crypto";
 const BASELINE = "baseline";
@@ -21,8 +23,7 @@ function nvhash_read(algo, filename, cb) {
     const stream = mod_fs.createReadStream(filename);
     let hash;
     let crypto;
-
-    special_cases = [BASELINE, SHA2_CRYPTO, MD5_CRYPTO];
+    let cumulative_duration = 0;
 
     // We want to test baseline, node-crypto, and nvhash with
     // the same code. This is some indirection to make that possible.
@@ -42,7 +43,9 @@ function nvhash_read(algo, filename, cb) {
     hash = crypto.createHash(algo);
 
     stream.on("data", d => {
+        const start = mod_perf.performance.now();
         hash.update(d);
+        cumulative_duration += mod_perf.performance.now() - start;
     });
 
     stream.on("error", err => {
@@ -52,7 +55,10 @@ function nvhash_read(algo, filename, cb) {
 
     stream.on("end", () => {
         let dgst = hash.digest();
-        cb(dgst);
+        cb({
+            "digest": dgst,
+            "cumulative_duration": cumulative_duration,
+        });
     });
 }
 
@@ -61,22 +67,19 @@ function main() {
 
     let checksum_bench = function checksum_bench(m_algo, cb) {
         const filename = "./test_files/myfile";
-        console.time(m_algo);
 
-        nvhash_read(m_algo, filename, function (dgst) {
-            console.timeEnd(m_algo);
-            if (dgst === null || dgst === undefined) {
+        nvhash_read(m_algo, filename, function (results) {
+            if (results.digest === null || results.digest === undefined) {
                 console.log("null digest for algo:", m_algo);
                 return;
             }
-            if (verbose) {
-                console.log(m_algo, Buffer.from(dgst, "utf-8").toString("hex"));
-            }
+            const dgst_str = Buffer.from(results.digest, "utf-8").toString("hex");
+            console.log(`${m_algo}: ${results.cumulative_duration}ms (${dgst_str})`);
             cb();
         });
     };
 
-    const algos = [BASELINE, BLAKE3, SHA2_CRYPTO, SHA2, MD5_CRYPTO, MD5, BASELINE];
+    const algos = [BASELINE, BLAKE3, SHA2, MD5, SHA2_CRYPTO, MD5_CRYPTO];
     mod_vasync.forEachPipeline({
         'func': checksum_bench,
         'inputs': algos,
