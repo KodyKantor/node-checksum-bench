@@ -2,7 +2,7 @@ const mod_fs = require("fs");
 const mod_vasync = require("vasync");
 const mod_perf = require("perf_hooks");
 
-const mod_nvhash = require("nv-hash");
+const mod_nvhash = require("nvhash");
 const mod_crypto = require("crypto");
 const mod_noop = require("./noop");
 
@@ -10,9 +10,9 @@ const mod_noop = require("./noop");
 const NODE_CRYPTO_SUFFIX = "-node-crypto";
 const BASELINE = "baseline";
 const SHA2_CRYPTO = "sha256" + NODE_CRYPTO_SUFFIX;
-const SHA2 = "sha2";
-const BLAKE3 = "blake3";
-const MD5 = "md5";
+const SHA2 = mod_nvhash.Algorithm.SHA256;
+const BLAKE3 = mod_nvhash.Algorithm.BLAKE3;
+const MD5 = mod_nvhash.Algorithm.MD5;
 const MD5_CRYPTO = "md5" + NODE_CRYPTO_SUFFIX;
 
 function use_crypto(algo) {
@@ -66,7 +66,10 @@ function main() {
     const verbose = false;
 
     let checksum_bench = function checksum_bench(m_algo, cb) {
-        const filename = "./test_files/myfile";
+        const filename = "./test_files/test-input.txt";
+
+        //const data = mod_fs.readFileSync(filename);
+        //console.log("hash", Buffer.from(mod_nvhash.hash("md5", "hello"), "utf-8").toString("hex"));
 
         nvhash_read(m_algo, filename, function (results) {
             if (results.digest === null || results.digest === undefined) {
