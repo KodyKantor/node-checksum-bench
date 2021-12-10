@@ -10,9 +10,9 @@ const mod_noop = require("./noop");
 const NODE_CRYPTO_SUFFIX = "-node-crypto";
 const BASELINE = "baseline";
 const SHA2_CRYPTO = "sha256" + NODE_CRYPTO_SUFFIX;
-const SHA2 = mod_nvhash.Algorithm.SHA256;
-const BLAKE3 = mod_nvhash.Algorithm.BLAKE3;
-const MD5 = mod_nvhash.Algorithm.MD5;
+const SHA2 = "sha256";
+const BLAKE3 = "blake3";
+const MD5 = "md5";
 const MD5_CRYPTO = "md5" + NODE_CRYPTO_SUFFIX;
 
 function use_crypto(algo) {
